@@ -1,23 +1,53 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
-
-# Virtual environments
-.venv
-
-# Python & uv
-.venv/
+# -----------------------------
+# Python bytecode / caches
+# -----------------------------
 __pycache__/
 *.py[cod]
 
+# -----------------------------
+# Virtual environments
+# -----------------------------
+.venv/
+
+# -----------------------------
+# Build artifacts
+# -----------------------------
+build/
+dist/
+wheels/
+*.egg-info/
+
+# -----------------------------
+# Test / tooling caches
+# -----------------------------
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# -----------------------------
 # Jupyter
+# -----------------------------
 .ipynb_checkpoints/
 
-# Data (Don't commit the NFL datasets)
+# -----------------------------
+# Local env / secrets (recommended)
+# -----------------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------------
+# Data & outputs
+# -----------------------------
 data/
-*.csv
-*.parquet
+output/
+
+# -----------------------------
+# Editor / OS
+# -----------------------------
+*.code-workspace
+.vscode/
+.DS_Store
+Thumbs.db

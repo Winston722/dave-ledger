@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # Use GitHub's cached Python installs (fast).
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      # Install uv (recommended official action) + enable uv cache.
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          # Optional: pin uv for repeatability
+          # version: "0.9.21"
+
+      # Fail if uv.lock is out of date (don’t auto-edit lockfiles in CI).
+      - name: Check lockfile
+        run: uv lock --check
+
+      - name: Sync environment (dev deps)
+        run: uv sync --locked --dev
+
+      - name: Run tests
+        run: uv run pytest -q

@@ -421,14 +421,23 @@ wheels = [
 [[package]]
 name = "dave-ledger"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "jupyterlab" },
     { name = "nfl-data-py" },
     { name = "numpy" },
     { name = "pandas" },
-    { name = "pytest" },
     { name = "pyyaml" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
 ]
 
 [package.metadata]
@@ -437,9 +446,13 @@ requires-dist = [
     { name = "nfl-data-py", specifier = ">=0.3.3" },
     { name = "numpy", specifier = ">=1.26.4" },
     { name = "pandas", specifier = ">=1.5.3" },
-    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.2" },
     { name = "pyyaml", specifier = ">=6.0.3" },
 ]
+provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=9.0.2" }]
 
 [[package]]
 name = "debugpy"

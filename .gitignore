@@ -51,9 +51,11 @@ output/
 .vscode/
 .DS_Store
 Thumbs.db
+*.egg-info/
 
 # -----------------------------
 # Configs
 # -----------------------------
 config/local.yaml
 config/*.local.yaml
+compose.local.yaml

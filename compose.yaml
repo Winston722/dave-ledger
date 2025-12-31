@@ -2,14 +2,14 @@ services:
   dave-ledger:
     build: .
     ports:
-      - "8888:8888"
+      - "127.0.0.1:8888:8888"
+    working_dir: /app
     volumes:
-      # Map your local folders to the container
-      # Format is: ./local_folder:/container_folder
-      - ./data:/app/data
-      - ./output:/app/output
-      - ./notebooks:/app/notebooks
-      - ./dave_ledger:/app/dave_ledger  # Live reloading for your code
+      - ./dave_ledger:/app/dave_ledger:Z
+      - ./config:/app/config:Z
+      - ./notebooks:/app/notebooks:Z
+      - ./data:/app/data:Z
+      - ./output:/app/output:Z
     environment:
-      # Set a simple password for local development
       - JUPYTER_TOKEN=dave
+    command: ["uv", "run", "jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]

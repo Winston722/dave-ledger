@@ -1,0 +1,15 @@
+services:
+  dave-ledger:
+    build: .
+    ports:
+      - "8888:8888"
+    volumes:
+      # Map your local folders to the container
+      # Format is: ./local_folder:/container_folder
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./notebooks:/app/notebooks
+      - ./dave_ledger:/app/dave_ledger  # Live reloading for your code
+    environment:
+      # Set a simple password for local development
+      - JUPYTER_TOKEN=dave

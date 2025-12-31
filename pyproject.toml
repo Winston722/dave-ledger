@@ -1,0 +1,17 @@
+[project]
+name = "dave-ledger"
+version = "0.1.0"
+description = "DAVE Ledger: Dynasty Asset Valuation Engine Ledger"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "jupyterlab>=4.5.1",
+    "nfl-data-py>=0.3.3",
+    "numpy>=1.26.4",
+    "pandas>=1.5.3",
+    "pytest>=9.0.2",
+    "pyyaml>=6.0.3",
+]
+
+[tool.setuptools]
+packages = ["dave_ledger"]

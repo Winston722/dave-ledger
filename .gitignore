@@ -51,3 +51,9 @@ output/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# -----------------------------
+# Configs
+# -----------------------------
+config/local.yaml
+config/*.local.yaml

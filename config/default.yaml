@@ -1,0 +1,134 @@
+# DAVE Ledger Configuration (Gold Master 2026)
+
+# --- 1. Data Context ---
+context:
+  current_year: 2025
+  history_years: 5
+
+# --- 2. Fantasy Scoring Rules (Bespoke IDP Scoring) ---
+scoring:
+  # OFFENSE
+  passing_yards: 0.04
+  passing_tds: 6.0
+  passing_2pt_conversions: 2.0
+  passing_interceptions: -1.0
+  sacks_suffered: 0.0
+  
+  rushing_yards: 0.1
+  rushing_tds: 6.0
+  
+  receptions: 1.0
+  receiving_yards: 0.1
+  receiving_tds: 6.0
+  
+  fumbles_lost: -2.0
+  
+  # KICKING (Tiered)
+  fg_made_0_19: 3.0
+  fg_made_20_29: 3.0
+  fg_made_30_39: 3.0
+  fg_made_40_49: 4.0
+  fg_made_50_59: 5.0
+  fg_made_60_: 6.0
+  pat_made: 1.0
+  fg_missed: -1.0
+  pat_missed: -1.0
+
+  # IDP / DEFENSE
+  def_tackles_solo: 1.3
+  def_tackles_with_assist: 0.75
+  def_tackles_for_loss: 3.0
+  def_sacks: 5.0            
+  def_sack_yards: 0.1
+  def_qb_hits: 2.0
+  def_interceptions: 6.0    
+  def_interception_yards: 0.1
+  def_pass_defended: 4.0
+  def_fumbles_forced: 4.0
+  fumble_recovery_opp: 3.0 
+  def_safeties: 5.0
+  def_tds: 6.0
+
+# --- 3. League Configuration (Baselines & VORP) ---
+league:
+  num_teams: 12
+  
+  # Starting Lineup Requirements
+  starters:
+    QB: 1
+    RB: 2
+    WR: 3
+    TE: 1
+    FLEX: 1
+    SUPERFLEX: 1
+    K: 1
+    # IDP
+    DL: 2
+    LB: 2
+    DB: 2
+    IDP_FLEX: 0
+    DEF: 0
+  
+  # "Viable Depth" Factor (0.0 = Starters only, 1.0 = Full backup rostered)
+  bench_factors:
+    QB: 1.0   # Superflex: Everyone rosters 2-3 QBs
+    RB: 1.5   # Hoarding RBs is standard
+    WR: 1.2   # Deep WR pools
+    TE: 0.5   # Shallow
+    K:  0.0   # Streamers
+    DL: 0.2   # Churn
+    LB: 0.5   # Tackle floor
+    DB: 0.1   # Streamers
+
+# --- 4. Valuation Model Parameters ---
+valuation:
+  discount_rate: 0.15     # 15% Time Value of Money
+  epsilon_val: 0.5        # Stop calculating if value < 0.5 pts
+  availability_weight: 20 # How sticky is the Bayesian Prior? (Higher = Slower to react to 1 injury)
+
+  # Bayesian Priors (Baseline Reliability % for Position)
+  availability_priors:
+    QB: 0.94
+    RB: 0.88
+    WR: 0.92
+    TE: 0.90
+    K: 0.98
+    DL: 0.90
+    LB: 0.92
+    DB: 0.90
+
+  # FORCE 1: PERFORMANCE DECAY (The "Washed" Factor)
+  # Multiplier applied to PPG for every year past the threshold.
+  # "decay_rate: 0.20" means they lose 20% of their scoring ability per year.
+  performance_growth:
+    QB: { end_age: 26, growth_rate: 0.05 } # Slow, steady learning curve
+    RB: { end_age: 23, growth_rate: 0.02 } # RBs are usually pro-ready immediately
+    WR: { end_age: 25, growth_rate: 0.10 } # The "Third Year Breakout" is real
+    TE: { end_age: 26, growth_rate: 0.15 } # TEs take years to develop
+    K:  { end_age: 25, growth_rate: 0.00 }
+    DL: { end_age: 25, growth_rate: 0.05 }
+    LB: { end_age: 24, growth_rate: 0.05 }
+    DB: { end_age: 24, growth_rate: 0.05 }
+  
+  performance_decay:
+    QB: { start_age: 36, decay_rate: 0.05 } # QBs maintain arm talent long
+    RB: { start_age: 27, decay_rate: 0.20 } # The steep cliff
+    WR: { start_age: 30, decay_rate: 0.10 } # Gradual fade
+    TE: { start_age: 31, decay_rate: 0.10 } # Old man strength
+    K:  { start_age: 40, decay_rate: 0.05 }
+    DL: { start_age: 29, decay_rate: 0.10 }
+    LB: { start_age: 29, decay_rate: 0.15 } # Speed loss hurts
+    DB: { start_age: 29, decay_rate: 0.15 }
+
+  # FORCE 2: RETIREMENT RISK (The "Exit" Factor)
+  # Logistic Curve: "cliff_age" is where they have a 50% chance of retiring.
+  # "k" is the steepness (Higher = Sudden retirement, Lower = Lingering)
+  retirement_risk:
+    QB: { cliff_age: 39.0, k: 0.8 } # They play until they can't
+    RB: { cliff_age: 32.0, k: 0.5 } # RBs rarely "retire", they just aren't signed
+    WR: { cliff_age: 34.0, k: 0.6 }
+    TE: { cliff_age: 34.0, k: 0.6 }
+    K:  { cliff_age: 42.0, k: 0.5 }
+    DL: { cliff_age: 33.0, k: 0.7 }
+    LB: { cliff_age: 32.0, k: 0.7 }
+    DB: { cliff_age: 32.0, k: 0.7 }

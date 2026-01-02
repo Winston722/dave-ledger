@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from dave_ledger.config import load_config
-from dave_ledger.paths import config_dir, find_repo_root
+from dave_ledger.core.config import load_config
+from dave_ledger.core.paths import config_dir, find_repo_root
 
 
 def test_repo_root_exists():

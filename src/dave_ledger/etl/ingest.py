@@ -1,6 +1,7 @@
 import nflreadpy as nfl
 import pandas as pd
-from dave_ledger import paths, config
+
+from dave_ledger.core import config, paths
 
 def update_data():
     """

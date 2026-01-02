@@ -1,6 +1,9 @@
 import logging
-from dave_ledger import transform, scoring, ingest, baselines, valuation
-from dave_ledger.config import load_config
+
+from dave_ledger.analysis import baselines, valuation
+from dave_ledger.core import scoring
+from dave_ledger.core.config import load_config
+from dave_ledger.etl import cleaning, ingest
 
 # Configure simple logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -31,7 +34,7 @@ def run_dave(update: bool = False):
     # 3. Load & Clean Data
     logger.info("1. [TRANSFORM] Loading & Merging History...")
     try:
-        df_raw = transform.load_and_clean_data()
+        df_raw = cleaning.load_and_clean_data()
         logger.info(f"   -> Loaded {len(df_raw)} rows of history.")
     except FileNotFoundError:
         logger.error("❌ Data not found! Hint: Run 'run_dave(update=True)' first.")

@@ -27,12 +27,13 @@ htmlcov/
 .ruff_cache/
 
 # -----------------------------
-# Jupyter
+# Jupyter Notebooks
 # -----------------------------
 .ipynb_checkpoints/
+*.ipynb
 
 # -----------------------------
-# Local env / secrets (recommended)
+# Local env / secrets
 # -----------------------------
 .env
 .env.*
@@ -52,6 +53,7 @@ output/
 .DS_Store
 Thumbs.db
 *.egg-info/
+
 
 # -----------------------------
 # Configs

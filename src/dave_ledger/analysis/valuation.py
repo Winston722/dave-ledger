@@ -50,19 +50,39 @@ class AssetValuator:
         df = self._calculate_talent(df)
 
         logger.info("   -> Calculating Risk Metrics...")
-        df = self._calculate_risk(df)
+        df = self._calculate_risk(df) 
         
         logger.info("   -> Running Infinite Horizon Projection...")
         df = self._project_infinite_horizon(df)
         
         return df.sort_values('vorp', ascending=False)
 
+    def _is_active_game(self, row: pd.Series) -> bool:
+        """
+        Determines if a player was active. 
+        Reliable fallback: If snaps are missing, assume active if they scored points.
+        """
+        off_pct = row.get('offense_pct', 0)
+        def_pct = row.get('defense_pct', 0)
+        points = row.get('fantasy_points', 0)
+        
+        # Handle NaNs by treating them as 0 for comparison
+        off_pct = 0 if pd.isna(off_pct) else off_pct
+        def_pct = 0 if pd.isna(def_pct) else def_pct
+        points = 0 if pd.isna(points) else points
+
+        return (off_pct > 0) or (def_pct > 0) or (abs(points) > 0)
+
     def _calculate_availability(self, df: pd.DataFrame) -> pd.DataFrame:
         def get_bayes_score(sub_df):
             if sub_df.empty: return 0.0
             pos_key = sub_df.iloc[-1].get('fantasy_group', sub_df.iloc[-1]['position'])
             
-            played = len(sub_df[ (sub_df['offense_pct'] > 0) | (sub_df['defense_pct'] > 0) ])
+            # --- UPDATED ACTIVE CHECK ---
+            # Filter to games where they actually played (Snaps > 0 OR Points != 0)
+            active_mask = sub_df.apply(self._is_active_game, axis=1)
+            played = len(sub_df[active_mask])
+            
             seasons = sub_df['season'].nunique()
             total_possible = seasons * 17
             
@@ -70,6 +90,7 @@ class AssetValuator:
             weight = self.availability_weight
             score = (played + (prior_rate * weight)) / (total_possible + weight)
             return min(score, 1.0)
+            
         scores = df.groupby('player_id').apply(get_bayes_score)
         latest = df.sort_values('season').groupby('player_id').tail(1).copy()
         latest['availability_score'] = latest['player_id'].map(scores)
@@ -78,27 +99,43 @@ class AssetValuator:
     def _calculate_talent(self, df: pd.DataFrame) -> pd.DataFrame:
         full_history = self.df
         current_year = self.cfg['context']['current_year']
+        
         def get_weighted_ppg(pid):
             games = full_history[full_history['player_id'] == pid]
-            active = games[(games['offense_pct'] > 0) | (games['defense_pct'] > 0)]
+            
+            # --- UPDATED ACTIVE CHECK ---
+            if games.empty: return 0.0
+            active_mask = games.apply(self._is_active_game, axis=1)
+            active = games[active_mask]
+            
             if len(active) == 0: return 0.0
+            
             weighted_sum = 0
             total_weight = 0
+            
             for _, row in active.iterrows():
                 offset = current_year - row['season']
                 w = self.year_weights.get(offset, 0.1) 
-                weighted_sum += (row['points'] * w)
+                # Ensure we use 'fantasy_points'
+                weighted_sum += (row['fantasy_points'] * w)
                 total_weight += w
+                
             if total_weight == 0: return 0.0
             return weighted_sum / total_weight
+            
         df['talent_ppg'] = df['player_id'].apply(get_weighted_ppg)
         return df
 
     def _calculate_risk(self, df: pd.DataFrame) -> pd.DataFrame:
         full_history = self.df
-        stats = full_history.groupby('player_id')['points'].agg(['std', 'mean'])
+        # Use fantasy_points here too
+        stats = full_history.groupby('player_id')['fantasy_points'].agg(['std', 'mean'])
+        
+        # Avoid division by zero
+        stats['mean'] = stats['mean'].replace(0, 1.0)
         stats['risk_cv'] = stats['std'] / stats['mean']
         stats = stats.fillna(0)
+        
         df['risk_cv'] = df['player_id'].map(stats['risk_cv'])
         return df
 
@@ -108,9 +145,15 @@ class AssetValuator:
             params = self.retire_params.get(group, self.default_retire)
             cliff = params.get('cliff_age', 34.0)
             k = params.get('k', 0.6)
+            
+            # --- FIX: S-Curve Correction ---
+            # We want prob_retire to INCREASE as age increases.
             exponent = k * (age - cliff)
             exponent = max(min(exponent, 100), -100)
-            prob_retire = 1.0 / (1.0 + np.exp(exponent)) 
+            
+            # Use negative exponent: 1 / (1 + e^-x) -> goes to 1 as x increases
+            prob_retire = 1.0 / (1.0 + np.exp(-exponent)) 
+            
             return 1.0 - prob_retire
 
         def get_performance_multiplier(group, age):
@@ -130,7 +173,7 @@ class AssetValuator:
             current_ppg = row['talent_ppg']
             availability = row['availability_score']
             age = row['current_age']
-            start_exp = row.get('years_exp', 5) # Default to veteran if missing
+            start_exp = row.get('years_exp', 5) 
             group = row['fantasy_group'] 
             floor = self.baselines.get(group, 0.0)
             
@@ -140,7 +183,7 @@ class AssetValuator:
             
             while True:
                 future_age = age + year
-                future_exp = start_exp + year # FIX: Increment Experience
+                future_exp = start_exp + year 
                 
                 # A. Retirement (Exit)
                 prob_return = get_active_prob(group, future_age)
@@ -154,7 +197,7 @@ class AssetValuator:
                 current_ppg *= perf_mult
                 
                 # C. Logic Gates (Shields & Handcuffs)
-                is_young = future_age <= 23 or future_exp < 3 # FIX: Use future_exp
+                is_young = future_age <= 23 or future_exp < 3 
                 is_handcuff = (group == 'RB') and (current_ppg < floor) and (current_ppg > 2.0)
                 
                 scoring_ppg = current_ppg

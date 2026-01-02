@@ -23,5 +23,5 @@ def apply_fantasy_scoring(df: pd.DataFrame, rules: Dict[str, float]) -> pd.DataF
 
     # 3. Assign to DataFrame
     df = df.copy()
-    df['points'] = total_points
+    df['fantasy_points'] = total_points
     return df

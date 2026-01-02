@@ -30,7 +30,7 @@ htmlcov/
 # Jupyter Notebooks
 # -----------------------------
 .ipynb_checkpoints/
-*.ipynb
+.ipynb
 
 # -----------------------------
 # Local env / secrets

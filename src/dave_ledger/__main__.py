@@ -1,4 +1,4 @@
-from dave_ledger.config import load_config
+from dave_ledger.core.config import load_config
 
 if __name__ == "__main__":
     cfg = load_config()

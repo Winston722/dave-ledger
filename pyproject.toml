@@ -19,7 +19,10 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["dave_ledger"]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [build-system]
 requires = ["setuptools>=68"]

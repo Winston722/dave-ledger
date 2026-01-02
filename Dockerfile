@@ -9,7 +9,7 @@ COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 # 3) Copy your source/config
-COPY dave_ledger/ ./dave_ledger/
+COPY src/ ./src/
 COPY config/ ./config/
 
 # 4) Now install the project into the same environment

@@ -61,7 +61,7 @@ def calculate_replacement_level(df: pd.DataFrame, cfg: Dict) -> Dict[str, float]
         pos_df = ppg_map[ppg_map['position'] == pos].sort_values('ppg', ascending=False).reset_index(drop=True)
         
         if len(pos_df) > total_slots and total_slots > 0:
-            baseline_row = pos_df.iloc[total_slots]
+            baseline_row = pos_df.iloc[total_slots-1]
             baseline_score = baseline_row['ppg']
             
             # Floor protection

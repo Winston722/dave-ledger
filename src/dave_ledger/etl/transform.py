@@ -88,7 +88,7 @@ def load_and_clean_data() -> pd.DataFrame:
         df['birth_date'] = pd.to_datetime(df['birth_date'], errors='coerce')
         avg_birth_year = current_year - 25
         # Int64 allows integers with NaNs
-        df['birth_year'] = df['birth_date'].dt.year.fillna(avg_birth_year).astype('Int64')
+        df['birth_year'] = df['birth_date'].dt.year.fillna(avg_birth_year).astype('Int64') # type: ignore
         df['current_age'] = (current_year + 1) - df['birth_year']
 
     # Ensure Fantasy Points exist

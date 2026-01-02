@@ -18,15 +18,20 @@ def calculate_replacement_level(df: pd.DataFrame, cfg: Dict) -> Dict[str, float]
     current_year = df['season'].max()
     df_curr = df[df['season'] == current_year].copy()
     
-    # Safety Check: Ensure fantasy_group exists, fallback to position if needed
+    # Safety Check: Ensure fantasy_group exists
     if 'fantasy_group' not in df_curr.columns:
         logger.warning("⚠️ 'fantasy_group' column missing! Falling back to 'position'.")
         df_curr['fantasy_group'] = df_curr['position']
     
-    # Calculate PPG
-    ppg_map = df_curr.groupby(['player_id', 'fantasy_group', 'full_name'])['points'].mean().reset_index()
-    ppg_map.rename(columns={'points': 'ppg', 'fantasy_group': 'position'}, inplace=True)
+    # --- THE FIX IS HERE ---
+    # We must use 'fantasy_points' (from transform.py), NOT 'points' (which might be season total)
+    target_col = 'fantasy_points'
     
+    # Calculate PPG (Average of Weekly Scores)
+    ppg_map = df_curr.groupby(['player_id', 'fantasy_group', 'full_name'])[target_col].mean().reset_index()
+    
+    # Rename for consistency
+    ppg_map.rename(columns={target_col: 'ppg', 'fantasy_group': 'position'}, inplace=True)
     baselines = {}
     
     # Flex Definitions

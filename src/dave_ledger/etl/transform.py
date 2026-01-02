@@ -7,6 +7,33 @@ from dave_ledger.core import config, paths
 
 logger = logging.getLogger(__name__)
 
+def _impute_birth_years(df: pd.DataFrame, current_year: int) -> pd.DataFrame:
+    """
+    Impute birth_year and current_age with position-aware medians and a global fallback.
+    """
+    df = df.copy()
+    df['birth_date'] = pd.to_datetime(df['birth_date'], errors='coerce')
+
+    # 1) Raw birth years (preserve NaNs for now)
+    df['birth_year'] = df['birth_date'].dt.year
+
+    # 2) Median birth year by position (broadcast to rows sharing that position)
+    if 'position' in df.columns:
+        pos_medians = df.groupby('position')['birth_year'].transform('median')
+        df['birth_year'] = df['birth_year'].fillna(pos_medians)
+
+    # 3) Global median safety net (handles rare positions with no valid dates)
+    global_median = current_year - 25
+    if df['birth_year'].median() > 0:
+        global_median = df['birth_year'].median()
+
+    df['birth_year'] = df['birth_year'].fillna(global_median).astype('Int64')
+
+    # 4) Age for next season (hence the +1)
+    df['current_age'] = (current_year + 1) - df['birth_year']
+    return df
+
+
 def load_and_clean_data() -> pd.DataFrame:
     """
     Loads data and merges Roster and Weekly stats.
@@ -85,11 +112,7 @@ def load_and_clean_data() -> pd.DataFrame:
     # --- 6. Final Calculations ---
     # Calculate Age
     if 'birth_date' in df.columns:
-        df['birth_date'] = pd.to_datetime(df['birth_date'], errors='coerce')
-        avg_birth_year = current_year - 25
-        # Int64 allows integers with NaNs
-        df['birth_year'] = df['birth_date'].dt.year.fillna(avg_birth_year).astype('Int64') # type: ignore
-        df['current_age'] = (current_year + 1) - df['birth_year']
+        df = _impute_birth_years(df, current_year)
 
     # Ensure Fantasy Points exist
     if 'fantasy_points' not in df.columns:
